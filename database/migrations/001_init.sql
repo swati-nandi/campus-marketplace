@@ -1,4 +1,4 @@
--- VIT Exchange schema. Targets PostgreSQL 16. Run on an empty database.
+-- VIT Exchange schema. Using PostgreSQL
 BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS citext;
