@@ -1,0 +1,12 @@
+{
+  "name": "@campus-marketplace/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "create-admin": "tsx scripts/createAdmin.ts"
+  }
+}
