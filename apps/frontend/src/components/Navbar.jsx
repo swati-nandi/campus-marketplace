@@ -69,6 +69,7 @@ function Navbar() {
           onClick={() => navigate("/wishlist")}
           type="button"
           aria-label="Wishlist"
+          title="Wishlist"
         >
           <Heart size={21} />
         </button>
@@ -78,6 +79,7 @@ function Navbar() {
           onClick={() => navigate("/profile")}
           type="button"
           aria-label="Profile"
+          title="Profile"
         >
           <User size={21} />
         </button>

@@ -18,7 +18,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         <Route path="/" element={<Home />} />
 
         <Route
@@ -60,7 +59,6 @@ function App() {
           path="*"
           element={<Navigate to="/" replace />}
         />
-
       </Routes>
     </BrowserRouter>
   );
