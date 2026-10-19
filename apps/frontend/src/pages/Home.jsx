@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ListingCard from "../components/ListingCard";
 
@@ -65,6 +66,8 @@ const listings = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
+
   return (
     <div>
       <Navbar />
@@ -87,17 +90,24 @@ function Home() {
             </p>
 
             <div className="hero-actions">
-              <button className="primary-button">
+              <button
+                className="primary-button"
+                onClick={() => navigate("/marketplace")}
+                type="button"
+              >
                 Browse Marketplace
               </button>
 
-              <button className="secondary-button">
+              <button
+                className="secondary-button"
+                onClick={() => navigate("/sell")}
+                type="button"
+              >
                 Sell an Item
               </button>
             </div>
           </div>
 
-          {/* CAMPUS DEALS CARD */}
           <div className="hero-card">
             <div className="hero-card-top">
               <span>Campus deals</span>
@@ -141,7 +151,11 @@ function Home() {
               <h2>Shop by category</h2>
             </div>
 
-            <button className="view-all-button">
+            <button
+              className="view-all-button"
+              onClick={() => navigate("/marketplace")}
+              type="button"
+            >
               View all →
             </button>
           </div>
@@ -151,6 +165,7 @@ function Home() {
               <div
                 className="category-card"
                 key={category.name}
+                onClick={() => navigate("/marketplace")}
               >
                 <div className="category-icon">
                   {category.icon}
@@ -174,7 +189,11 @@ function Home() {
               <h2>Fresh on campus</h2>
             </div>
 
-            <button className="view-all-button">
+            <button
+              className="view-all-button"
+              onClick={() => navigate("/marketplace")}
+              type="button"
+            >
               View marketplace →
             </button>
           </div>

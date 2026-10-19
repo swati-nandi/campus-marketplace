@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: vit_exchange_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vit_exchange
+      POSTGRES_USER: vit
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:docker compose up -d
