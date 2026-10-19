@@ -5,10 +5,7 @@ const authenticateToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// ============================================================
 // GET USER WISHLIST
-// ============================================================
-
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -27,7 +24,7 @@ router.get("/", authenticateToken, async (req, res) => {
         ON l.id = w.listing_id
       JOIN categories c
         ON c.id = l.category_id
-      JOIN campus_locations loc
+      LEFT JOIN campus_locations loc
         ON loc.id = l.location_id
       WHERE w.user_id = $1
       ORDER BY w.added_at DESC
@@ -49,13 +46,26 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-// ============================================================
 // ADD LISTING TO WISHLIST
-// ============================================================
-
 router.post("/:listingId", authenticateToken, async (req, res) => {
   try {
     const { listingId } = req.params;
+
+    const listingResult = await pool.query(
+      `
+      SELECT id
+      FROM listings
+      WHERE id = $1
+      `,
+      [listingId]
+    );
+
+    if (listingResult.rows.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Listing not found",
+      });
+    }
 
     await pool.query(
       `
@@ -84,10 +94,7 @@ router.post("/:listingId", authenticateToken, async (req, res) => {
   }
 });
 
-// ============================================================
 // REMOVE LISTING FROM WISHLIST
-// ============================================================
-
 router.delete("/:listingId", authenticateToken, async (req, res) => {
   try {
     const { listingId } = req.params;

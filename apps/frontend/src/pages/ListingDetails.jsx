@@ -37,16 +37,26 @@ function ListingDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Request state
+  // ==============================
+  // WISHLIST
+  // ==============================
+
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  // ==============================
+  // REQUEST
+  // ==============================
+
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [requestError, setRequestError] = useState("");
 
-  // Wishlist state
-  const [saved, setSaved] = useState(false);
-  const [wishlistLoading, setWishlistLoading] = useState(false);
+  // ==============================
+  // FETCH LISTING
+  // ==============================
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -76,7 +86,7 @@ function ListingDetails() {
           title: data.title,
           category: data.category_name,
           location: data.location_name,
-          price: Number(data.price),
+          price: Number(data.price || 0),
           type: data.listing_type,
           icon: getCategoryIcon(data.category_name),
           condition: formatCondition(data.condition),
@@ -106,15 +116,18 @@ function ListingDetails() {
     fetchListing();
   }, [id]);
 
-  // Check whether this listing is already saved
+  // ==============================
+  // CHECK WISHLIST
+  // ==============================
+
   useEffect(() => {
-    const fetchWishlistStatus = async () => {
+    const checkWishlist = async () => {
       const token = localStorage.getItem(
         "vit_exchange_token"
       );
 
       if (!token) {
-        setSaved(false);
+        setIsWishlisted(false);
         return;
       }
 
@@ -122,33 +135,117 @@ function ListingDetails() {
         const response = await fetch(
           "http://localhost:4000/api/wishlist",
           {
+            method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
 
-        if (!response.ok) {
+        if (response.status === 401) {
+          setIsWishlisted(false);
           return;
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch wishlist"
+          );
         }
 
         const data = await response.json();
 
-        const exists = data.wishlist?.some(
-          (item) => Number(item.listing_id) === Number(id)
+        const wishlist = Array.isArray(
+          data.wishlist
+        )
+          ? data.wishlist
+          : [];
+
+        const found = wishlist.some(
+          (item) =>
+            String(item.listing_id) === String(id)
         );
 
-        setSaved(Boolean(exists));
+        setIsWishlisted(found);
       } catch (error) {
         console.error(
           "Failed to check wishlist:",
           error
         );
+
+        setIsWishlisted(false);
       }
     };
 
-    fetchWishlistStatus();
+    checkWishlist();
   }, [id]);
+
+  // ==============================
+  // TOGGLE WISHLIST
+  // ==============================
+
+  const handleWishlist = async () => {
+    const token = localStorage.getItem(
+      "vit_exchange_token"
+    );
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    if (!listing || wishlistLoading) {
+      return;
+    }
+
+    const currentlyWishlisted = isWishlisted;
+
+    try {
+      setWishlistLoading(true);
+
+      const response = await fetch(
+        `http://localhost:4000/api/wishlist/${listing.id}`,
+        {
+          method: currentlyWishlisted
+            ? "DELETE"
+            : "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Could not update wishlist."
+        );
+      }
+
+      // Update only after the database request succeeds.
+      setIsWishlisted(!currentlyWishlisted);
+    } catch (error) {
+      console.error(
+        "Wishlist update failed:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Could not update wishlist. Please try again."
+      );
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  // ==============================
+  // BUY / RENT / BORROW REQUEST
+  // ==============================
 
   const handleRequest = async () => {
     setRequestError("");
@@ -167,7 +264,6 @@ function ListingDetails() {
       return;
     }
 
-    // Rental and borrow requests need dates
     if (
       listing.type === "rental" ||
       listing.type === "borrow"
@@ -228,7 +324,6 @@ function ListingDetails() {
           "Your request has been sent successfully."
       );
 
-      // Prevent submitting the same request again
       if (
         listing.type === "rental" ||
         listing.type === "borrow"
@@ -251,54 +346,9 @@ function ListingDetails() {
     }
   };
 
-  const handleWishlist = async () => {
-    const token = localStorage.getItem(
-      "vit_exchange_token"
-    );
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    if (!listing) {
-      return;
-    }
-
-    try {
-      setWishlistLoading(true);
-
-      const method = saved ? "DELETE" : "POST";
-
-      const response = await fetch(
-        `http://localhost:4000/api/wishlist/${listing.id}`,
-        {
-          method,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Could not update wishlist."
-        );
-      }
-
-      setSaved(!saved);
-    } catch (error) {
-      console.error(
-        "Wishlist update failed:",
-        error
-      );
-    } finally {
-      setWishlistLoading(false);
-    }
-  };
+  // ==============================
+  // LOADING
+  // ==============================
 
   if (loading) {
     return (
@@ -313,6 +363,10 @@ function ListingDetails() {
     );
   }
 
+  // ==============================
+  // ERROR
+  // ==============================
+
   if (error) {
     return (
       <main className="listing-not-found">
@@ -323,12 +377,17 @@ function ListingDetails() {
         <button
           className="primary-button"
           onClick={() => navigate("/marketplace")}
+          type="button"
         >
           Back to Marketplace
         </button>
       </main>
     );
   }
+
+  // ==============================
+  // NOT FOUND
+  // ==============================
 
   if (!listing) {
     return (
@@ -342,6 +401,7 @@ function ListingDetails() {
         <button
           className="primary-button"
           onClick={() => navigate("/marketplace")}
+          type="button"
         >
           Back to Marketplace
         </button>
@@ -349,26 +409,26 @@ function ListingDetails() {
     );
   }
 
-  const isRental =
-    listing.type === "rental";
-
-  const isBorrow =
-    listing.type === "borrow";
-
-  const isSale =
-    listing.type === "sale";
+  const isRental = listing.type === "rental";
+  const isBorrow = listing.type === "borrow";
+  const isSale = listing.type === "sale";
 
   return (
     <main className="listing-details-page">
       <button
         className="back-button"
         onClick={() => navigate(-1)}
+        type="button"
       >
         <ArrowLeft size={18} />
         Back
       </button>
 
       <div className="listing-details">
+        {/* ==============================
+            IMAGE
+        ============================== */}
+
         <div className="listing-details-image">
           <span
             className={`listing-type ${listing.type}`}
@@ -384,6 +444,10 @@ function ListingDetails() {
             {listing.icon}
           </div>
         </div>
+
+        {/* ==============================
+            INFORMATION
+        ============================== */}
 
         <div className="listing-details-info">
           <p className="eyebrow">
@@ -407,20 +471,15 @@ function ListingDetails() {
             )}
 
             {isBorrow && (
-              <span>
-                {" "}
-                / free
-              </span>
+              <span> / free</span>
             )}
           </div>
 
-          {isRental &&
-            listing.deposit && (
-              <p className="details-deposit">
-                Security deposit: ₹
-                {listing.deposit}
-              </p>
-            )}
+          {isRental && listing.deposit && (
+            <p className="details-deposit">
+              Security deposit: ₹{listing.deposit}
+            </p>
+          )}
 
           <div className="details-divider" />
 
@@ -431,9 +490,10 @@ function ListingDetails() {
 
           <div className="details-description">
             <h3>Description</h3>
-
             <p>{listing.description}</p>
           </div>
+
+          {/* SELLER */}
 
           <div className="seller-card">
             <div className="seller-avatar">
@@ -447,6 +507,10 @@ function ListingDetails() {
               <strong>{listing.seller}</strong>
             </div>
           </div>
+
+          {/* ==============================
+              RENTAL / BORROW DATES
+          ============================== */}
 
           {(isRental || isBorrow) && (
             <div className="request-dates">
@@ -505,6 +569,8 @@ function ListingDetails() {
             </div>
           )}
 
+          {/* REQUEST MESSAGES */}
+
           {requestError && (
             <div className="request-error">
               {requestError}
@@ -517,11 +583,16 @@ function ListingDetails() {
             </div>
           )}
 
+          {/* ==============================
+              ACTION BUTTONS
+          ============================== */}
+
           <div className="details-actions">
             <button
               className="primary-button"
               onClick={handleRequest}
               disabled={requestLoading}
+              type="button"
             >
               {requestLoading
                 ? "Sending..."
@@ -534,23 +605,48 @@ function ListingDetails() {
 
             <button
               className={`save-button ${
-                saved ? "saved" : ""
+                isWishlisted
+                  ? "wishlist-active"
+                  : ""
               }`}
               onClick={handleWishlist}
               disabled={wishlistLoading}
+              type="button"
+              aria-label={
+                isWishlisted
+                  ? "Remove from wishlist"
+                  : "Add to wishlist"
+              }
+              title={
+                isWishlisted
+                  ? "Remove from wishlist"
+                  : "Add to wishlist"
+              }
             >
               <Heart
                 size={19}
-                fill={saved ? "currentColor" : "none"}
+                strokeWidth={2}
+                fill={
+                  isWishlisted
+                    ? "#dc2626"
+                    : "none"
+                }
+                color={
+                  isWishlisted
+                    ? "#dc2626"
+                    : "currentColor"
+                }
               />
 
               {wishlistLoading
                 ? "Saving..."
-                : saved
+                : isWishlisted
                 ? "Saved"
                 : "Save"}
             </button>
           </div>
+
+          {/* SAFETY */}
 
           <div className="safe-campus">
             <ShieldCheck size={19} />
