@@ -19,12 +19,12 @@ const categories = [
     icon: "🧪",
   },
   {
-    name: "Cycles & Mobility",
+    name: "Cycles & Campus Mobility",
     description: "Cycles and campus transport",
     icon: "🚲",
   },
   {
-    name: "Hostel Essentials",
+    name: "Hostel Room Essentials",
     description: "Everything for your hostel room",
     icon: "🛏️",
   },
@@ -32,30 +32,34 @@ const categories = [
 
 const listings = [
   {
+    id: 1,
     title: "Advanced Engineering Mathematics",
     category: "Books & Study Materials",
-    location: "M-Block Hostel",
+    location: "M-Block Men's Hostel",
     price: 600,
     type: "sale",
     icon: "📚",
   },
   {
+    id: 2,
     title: "Hercules 7-Speed Gear Cycle",
-    category: "Cycles & Mobility",
+    category: "Cycles & Campus Mobility",
     location: "VIT Lake",
     price: 2500,
     type: "sale",
     icon: "🚲",
   },
   {
+    id: 3,
     title: "Mechanical Workshop Tools & Lab Coat",
-    category: "Lab & Engineering Gear",
+    category: "Lab Coats & Engineering Gear",
     location: "TT",
     price: 350,
     type: "sale",
     icon: "🧪",
   },
   {
+    id: 4,
     title: "Casio FX-991EX Scientific Calculator",
     category: "Electronics & Gadgets",
     location: "SJT",
@@ -68,6 +72,10 @@ const listings = [
 function Home() {
   const navigate = useNavigate();
 
+  const openListing = (listingId) => {
+    navigate(`/listing/${listingId}`);
+  };
+
   return (
     <div>
       <Navbar />
@@ -76,7 +84,9 @@ function Home() {
         {/* HERO SECTION */}
         <section className="hero">
           <div className="hero-content">
-            <p className="eyebrow">VIT CAMPUS MARKETPLACE</p>
+            <p className="eyebrow">
+              VIT CAMPUS MARKETPLACE
+            </p>
 
             <h1>
               Buy. Sell. Rent.
@@ -85,14 +95,16 @@ function Home() {
             </h1>
 
             <p className="hero-description">
-              Find useful items from fellow students or give your
-              unused things a second life.
+              Find useful items from fellow students or give
+              your unused things a second life.
             </p>
 
             <div className="hero-actions">
               <button
                 className="primary-button"
-                onClick={() => navigate("/marketplace")}
+                onClick={() =>
+                  navigate("/marketplace")
+                }
                 type="button"
               >
                 Browse Marketplace
@@ -127,7 +139,9 @@ function Home() {
               <span>🧮</span>
 
               <div>
-                <strong>Scientific Calculators</strong>
+                <strong>
+                  Scientific Calculators
+                </strong>
                 <small>From ₹50</small>
               </div>
             </div>
@@ -153,7 +167,9 @@ function Home() {
 
             <button
               className="view-all-button"
-              onClick={() => navigate("/marketplace")}
+              onClick={() =>
+                navigate("/marketplace")
+              }
               type="button"
             >
               View all →
@@ -165,7 +181,9 @@ function Home() {
               <div
                 className="category-card"
                 key={category.name}
-                onClick={() => navigate("/marketplace")}
+                onClick={() =>
+                  navigate("/marketplace")
+                }
               >
                 <div className="category-icon">
                   {category.icon}
@@ -175,7 +193,9 @@ function Home() {
 
                 <p>{category.description}</p>
 
-                <span className="category-arrow">↗</span>
+                <span className="category-arrow">
+                  ↗
+                </span>
               </div>
             ))}
           </div>
@@ -191,7 +211,9 @@ function Home() {
 
             <button
               className="view-all-button"
-              onClick={() => navigate("/marketplace")}
+              onClick={() =>
+                navigate("/marketplace")
+              }
               type="button"
             >
               View marketplace →
@@ -200,10 +222,26 @@ function Home() {
 
           <div className="listings-grid">
             {listings.map((listing) => (
-              <ListingCard
-                key={listing.title}
-                listing={listing}
-              />
+              <div
+                key={listing.id}
+                className="home-listing-wrapper"
+                onClick={() =>
+                  openListing(listing.id)
+                }
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                  ) {
+                    event.preventDefault();
+                    openListing(listing.id);
+                  }
+                }}
+              >
+                <ListingCard listing={listing} />
+              </div>
             ))}
           </div>
         </section>
